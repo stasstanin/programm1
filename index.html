@@ -1,300 +1,361 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Task Tracker</title>
 <style>
-:root{--bg:#fff;--text:#222;--border:#ccc;--tech:#3498db;--soft:#2ecc71}
-body.dark{--bg:#0a1628;--text:#eef;--border:#446;--tech:#5af;--soft:#5f5}
-body{margin:0;font-family:sans-serif;background:var(--bg);color:var(--text);transition:.3s}
-.header{display:flex;align-items:center;justify-content:space-between;padding:15px;border-bottom:1px solid var(--border)}
-.avatar{width:60px;height:60px;border-radius:50%;background:#ddd;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.theme-btn{padding:8px 15px;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text)}
-.container{display:flex;gap:20px;padding:20px;max-width:1200px;margin:0 auto}
-.col{flex:1;background:rgba(0,0,0,0.03);padding:15px;border-radius:8px;border:1px solid var(--border)}
-h2{margin-top:0;font-size:1.2rem;border-bottom:1px solid var(--border);padding-bottom:10px}
-.task-list{list-style:none;padding:0;margin:0}
-.task-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05)}
-.task-icon{margin-right:10px;font-size:1.2rem;width:20px;text-align:center}
-.timer-btn{background:none;border:1px solid var(--border);padding:5px 10px;cursor:pointer;color:var(--text);font-family:monospace;font-size:1rem;border-radius:4px}
-.timer-btn.running{background:var(--tech);color:#fff;border-color:var(--tech)}
-.edit-btn{margin-left:10px;background:none;border:none;cursor:pointer;font-size:1rem;opacity:0.6}
-.input-row{display:flex;gap:10px;margin-top:15px}
-.input-row input{flex:1;padding:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:4px}
-.input-row button{padding:8px 15px;background:var(--text);color:var(--bg);border:none;cursor:pointer;border-radius:4px}
-.stats{padding:20px;max-width:1200px;margin:0 auto}
-.stat-title{text-align:center;margin-bottom:15px}
-/* Serious Chart */
-.histogram{display:flex;justify-content:space-around;align-items:flex-end;height:150px;padding:10px;border:1px solid var(--border)}
-.bar-col{display:flex;flex-direction:column;align-items:center;width:12%}
-.bar{width:100%;display:flex;flex-direction:column-reverse}
-.seg-tech{background:var(--tech);transition:height .5s}
-.seg-soft{background:var(--soft);transition:height .5s}
-.day-label{font-size:0.8rem;margin-top:5px}
-/* Quest Chart */
-.constellation{position:relative;height:200px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.star{position:absolute;width:8px;height:8px;background:#ffeb3b;border-radius:50%;box-shadow:0 0 5px #ffeb3b;z-index:2}
-.star.soft{background:#5f5;box-shadow:0 0 5px #5f5}
-svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
-.line-seg{stroke:rgba(255,255,255,0.3);stroke-width:1}
-.edit-inputs{display:flex;gap:5px;align-items:center}
-.edit-inputs input{width:40px;padding:2px}
-.save-edit{padding:2px 5px;font-size:0.8rem}
+:root { --bg: #fff; --text: #333; --border: #ccc; --input-bg: #fff; --tech-color: #2196F3; --soft-color: #4CAF50; }
+body.quest { --bg: #0a192f; --text: #e6f1ff; --border: #1d4ed8; --input-bg: #112240; }
+body { font-family: 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.avatar-container { position: relative; width: 80px; height: 80px; cursor: pointer; overflow: hidden; border-radius: 50%; border: 2px solid var(--border); background: #eee; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.avatar-svg { width: 100%; height: 100%; fill: #999; }
+.theme-btn { padding: 8px 16px; cursor: pointer; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); }
+.container { display: flex; gap: 20px; }
+.column { flex: 1; background: var(--input-bg); border: 1px solid var(--border); padding: 15px; border-radius: 4px; }
+.column h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.task-list { list-style: none; padding: 0; min-height: 200px; }
+.task-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(128,128,128,0.2); }
+.task-icon { margin-right: 10px; font-size: 18px; width: 20px; text-align: center; }
+.task-text { flex-grow: 1; }
+.timer-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 4px 8px; cursor: pointer; font-family: inherit; min-width: 80px; }
+.edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; margin-left: 5px; opacity: 0.7; }
+.edit-panel { display: flex; gap: 5px; align-items: center; }
+.edit-input { width: 50px; padding: 2px; background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+.save-edit-btn { padding: 2px 6px; cursor: pointer; background: var(--tech-color); color: white; border: none; }
+.add-form { display: flex; gap: 10px; margin-top: 15px; }
+.add-input { flex-grow: 1; padding: 8px; background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+.add-btn { padding: 8px 16px; background: var(--tech-color); color: white; border: none; cursor: pointer; }
+.stats-container { margin-top: 30px; padding: 20px; background: var(--input-bg); border: 1px solid var(--border); }
+.histogram { display: flex; justify-content: space-around; align-items: flex-end; height: 150px; padding-top: 20px; }
+.bar-group { display: flex; flex-direction: column; align-items: center; width: 12%; height: 100%; justify-content: flex-end; }
+.bar-segment { width: 100%; transition: height 0.3s; }
+.bar-tech { background: var(--tech-color); }
+.bar-soft { background: var(--soft-color); }
+.day-label { margin-top: 5px; font-size: 12px; }
+.constellation { position: relative; height: 200px; background: #020c1b; border: 1px solid #1d4ed8; overflow: hidden; }
+.star-point { position: absolute; width: 6px; height: 6px; background: gold; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px gold; }
+.hidden { display: none; }
 </style>
 </head>
 <body>
+
 <div class="header">
-  <div style="display:flex;align-items:center;gap:15px">
-    <div class="avatar" id="avatarBox">
-      <svg viewBox="0 0 24 24" fill="#999"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-    </div>
+  <div class="avatar-container" id="avatarContainer">
+    <svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    <img class="avatar-img" id="avatarImg" alt="Avatar">
     <input type="file" id="avatarInput" accept="image/*" style="display:none">
-    <h1 style="margin:0;font-size:1.5rem">Трекер Задач</h1>
   </div>
-  <button class="theme-btn" id="themeToggle">Сменить тему</button>
+  <button class="theme-btn" id="themeToggle">Тема: Серьезная</button>
 </div>
 
 <div class="container">
-  <div class="col" id="colTech">
+  <div class="column" id="col-tech">
     <h2>Технические задачи ⚙️</h2>
-    <ul class="task-list" id="listTech"></ul>
-    <div class="input-row">
-      <input type="text" id="inTech" placeholder="Новая задача...">
-      <button onclick="addTask('tech')">Добавить</button>
+    <ul class="task-list" id="list-tech"></ul>
+    <div class="add-form">
+      <input type="text" class="add-input" id="input-tech" placeholder="Новая задача...">
+      <button class="add-btn" onclick="addTask('tech')">Добавить</button>
     </div>
   </div>
-  <div class="col" id="colSoft">
-    <h2>Мягкие навыки 🧠</h2>
-    <ul class="task-list" id="listSoft"></ul>
-    <div class="input-row">
-      <input type="text" id="inSoft" placeholder="Новый навык...">
-      <button onclick="addTask('soft')">Добавить</button>
+  <div class="column" id="col-soft">
+    <h2>Мягкие навыки 🤝</h2>
+    <ul class="task-list" id="list-soft"></ul>
+    <div class="add-form">
+      <input type="text" class="add-input" id="input-soft" placeholder="Новый навык...">
+      <button class="add-btn" onclick="addTask('soft')">Добавить</button>
     </div>
   </div>
 </div>
 
-<div class="stats">
-  <div class="stat-title">Статистика за неделю</div>
-  <div id="chartContainer"></div>
+<div class="stats-container" id="statsBox">
+  <h3>Статистика за неделю</h3>
+  <div id="statsContent"></div>
 </div>
 
 <script>
-const LS_KEY='tasks_v1';
-const LS_AVATAR='avatar_v1';
-const LS_THEME='theme_v1';
-let tasks=[];
-let theme='serious';
-let timers={};
+let tasks = [];
+let theme = 'serious';
+let timers = {};
 
-try{
-  tasks=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
-  theme=localStorage.getItem(LS_THEME)||'serious';
-}catch(e){console.error('LS error',e);}
-
-// Init
-document.body.className=theme==='quest'?'dark':'';
-loadAvatar();
-render();
-renderStats();
-
-// Avatar
-document.getElementById('avatarBox').onclick=()=>document.getElementById('avatarInput').click();
-document.getElementById('avatarInput').onchange=e=>{
-  const f=e.target.files[0];
-  if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    try{localStorage.setItem(LS_AVATAR,ev.target.result);loadAvatar();}
-    catch(err){alert('Фото слишком большое');}
-  };
-  r.readAsDataURL(f);
-};
-function loadAvatar(){
-  const src=localStorage.getItem(LS_AVATAR);
-  const box=document.getElementById('avatarBox');
-  if(src){box.innerHTML='<img src="'+src+'">'}
-  else{box.innerHTML='<svg viewBox="0 0 24 24" fill="#999"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'}
-}
-
-// Theme Toggle
-document.getElementById('themeToggle').onclick=()=>{
-  theme=theme==='serious'?'quest':'serious';
-  localStorage.setItem(LS_THEME,theme);
-  document.body.className=theme==='quest'?'dark':'';
+function init() {
+  try {
+    const savedTasks = localStorage.getItem('tt_tasks');
+    tasks = savedTasks ? JSON.parse(savedTasks) : [];
+    const savedTheme = localStorage.getItem('tt_theme');
+    if (savedTheme === 'quest') setTheme('quest');
+    const savedAvatar = localStorage.getItem('tt_avatar');
+    if (savedAvatar) {
+      document.getElementById('avatarImg').src = savedAvatar;
+      document.getElementById('avatarImg').style.display = 'block';
+      document.querySelector('.avatar-svg').style.display = 'none';
+    }
+    tasks.forEach(t => { if(t.status==='completed' && !t.completedAt) t.completedAt = Date.now(); });
+  } catch (e) { console.error(e); tasks = []; }
   render();
   renderStats();
-};
-
-// Logic
-function save(){localStorage.setItem(LS_KEY,JSON.stringify(tasks));renderStats();}
-function addTask(type){
-  const inp=document.getElementById(type==='tech'?'inTech':'inSoft');
-  const txt=inp.value.trim();
-  if(!txt)return;
-  tasks.push({id:Date.now(),type,text:'',done:false,timeSpent:0,lastStart:null});
-  inp.value='';
-  save();
 }
-function toggleTimer(id){
-  const t=tasks.find(x=>x.id===id);
-  if(!t)return;
-  if(timers[id]){
-    clearInterval(timers[id]);
+
+function saveData() {
+  localStorage.setItem('tt_tasks', JSON.stringify(tasks));
+  localStorage.setItem('tt_theme', theme);
+}
+
+document.getElementById('avatarContainer').addEventListener('click', () => document.getElementById('avatarInput').click());
+document.getElementById('avatarInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    localStorage.setItem('tt_avatar', evt.target.result);
+    document.getElementById('avatarImg').src = evt.target.result;
+    document.getElementById('avatarImg').style.display = 'block';
+    document.querySelector('.avatar-svg').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => setTheme(theme === 'serious' ? 'quest' : 'serious'));
+
+function setTheme(newTheme) {
+  theme = newTheme;
+  document.body.className = theme === 'quest' ? 'quest' : '';
+  document.getElementById('themeToggle').innerText = theme === 'quest' ? 'Тема: Квест' : 'Тема: Серьезная';
+  saveData();
+  render();
+  renderStats();
+}
+
+function addTask(type) {
+  const input = document.getElementById(`input-${type}`);
+  const text = input.value.trim();
+  if (!text) return;
+  tasks.push({ id: Date.now(), type, text, status: 'pending', elapsedTime: 0, completedAt: null });
+  input.value = '';
+  saveData();
+  render();
+  renderStats();
+}
+
+function toggleTimer(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task || task.status === 'completed') return;
+
+  if (!timers[id]) {
+    timers[id] = { startTime: Date.now(), elapsed: 0, intervalId: setInterval(() => updateTimerDisplay(id), 1000) };
+  } else {
+    clearInterval(timers[id].intervalId);
+    const diffMins = Math.floor((Date.now() - timers[id].startTime) / 60000);
+    task.elapsedTime = timers[id].elapsed + diffMins;
+    task.status = 'completed';
+    task.completedAt = Date.now();
     delete timers[id];
-    t.done=true;
-    t.lastStart=null;
-  }else{
-    t.lastStart=Date.now();
-    timers[id]=setInterval(()=>{
-      t.timeSpent++;
-      save();
-    },60000);
+    saveData();
+    render();
+    renderStats();
   }
-  save();
 }
-function editTime(id){
-  const t=tasks.find(x=>x.id===id);
-  const row=document.getElementById('row-'+id);
-  const h=Math.floor(t.timeSpent/60);
-  const m=t.timeSpent%60;
-  row.innerHTML=`<span class="task-icon">${getIcon(t)}</span><span style="flex:1">${t.text}</span>
-    <div class="edit-inputs">
-      <input type="number" id="ed-h-${id}" value="${h}" min="0">ч
-      <input type="number" id="ed-m-${id}" value="${m}" min="0" max="59">м
-      <button class="save-edit" onclick="saveEdit(${id})">OK</button>
+
+function updateTimerDisplay(id) {
+  if (!timers[id]) return;
+  const totalMins = timers[id].elapsed + Math.floor((Date.now() - timers[id].startTime) / 60000);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  const btn = document.getElementById(`timer-btn-${id}`);
+  if (btn) btn.innerText = `${h}ч ${m.toString().padStart(2, '0')}м`;
+}
+
+function editTask(id, event) {
+  if(event) event.stopPropagation();
+  const task = tasks.find(t => t.id === id);
+  if (!task || task.status !== 'completed') return;
+  const row = document.getElementById(`task-row-${id}`);
+  const textSpan = row.querySelector('.task-text');
+  const hours = Math.floor(task.elapsedTime / 60);
+  const mins = task.elapsedTime % 60;
+  textSpan.innerHTML = `
+    <div class="edit-panel">
+      <input type="number" class="edit-input" id="edit-h-${id}" value="${hours}" min="0">
+      <span>:</span>
+      <input type="number" class="edit-input" id="edit-m-${id}" value="${mins}" min="0" max="59">
+      <button class="save-edit-btn" onclick="saveEdit(${id})">OK</button>
     </div>`;
+  row.querySelector('.timer-btn').style.display = 'none';
+  row.querySelector('.edit-btn').style.display = 'none';
 }
-function saveEdit(id){
-  const t=tasks.find(x=>x.id===id);
-  const h=parseInt(document.getElementById('ed-h-'+id).value)||0;
-  const m=parseInt(document.getElementById('ed-m-'+id).value)||0;
-  t.timeSpent=h*60+m;
-  save();
-}
-function getIcon(t){
-  if(theme==='quest') return t.done?'🛡️':'⚔️';
-  return t.done?'🔘':'⚪';
-}
-function fmt(mins){
-  const h=Math.floor(mins/60);
-  const m=mins%60;
-  return `${h}ч ${m.toString().padStart(2,'0')}м`;
-}
-function render(){
-  ['tech','soft'].forEach(type=>{
-    const list=document.getElementById(type==='tech'?'listTech':'listSoft');
-    list.innerHTML='';
-    tasks.filter(t=>t.type===type).forEach(t=>{
-      const li=document.createElement('li');
-      li.className='task-item';
-      li.id='row-'+t.id;
-      let btnTxt='00:00';
-      let btnClass='timer-btn';
-      if(timers[t.id]){
-        btnTxt='▶ '+fmt(t.timeSpent+Math.floor((Date.now()-t.lastStart)/60000));
-        btnClass+=' running';
-      }else if(t.done){
-        btnTxt='Сделано за '+fmt(t.timeSpent);
-      }
-      li.innerHTML=`<span class="task-icon">${getIcon(t)}</span><span style="flex:1">${t.text}</span>
-        <button class="${btnClass}" onclick="toggleTimer(${t.id})">${btnTxt}</button>
-        ${t.done?'<button class="edit-btn" onclick="editTime('+t.id+')">✎</button>':''}`;
-      list.appendChild(li);
-    });
-  });
-  // Update running timers text live
-  Object.keys(timers).forEach(id=>{
-    const t=tasks.find(x=>x.id==id);
-    const btn=document.querySelector(`button[onclick="toggleTimer(${id})"]`);
-    if(btn && t){
-      const cur=t.timeSpent+Math.floor((Date.now()-t.lastStart)/60000);
-      btn.textContent='▶ '+fmt(cur);
-    }
-  });
-}
-setInterval(render,1000);
 
-// Stats
-function getWeekDays(){
-  const now=new Date();
-  const day=now.getDay()||7;
-  const mon=new Date(now);
-  mon.setDate(now.getDate()-day+1);
-  mon.setHours(0,0,0,0);
-  const days=[];
-  for(let i=0;i<7;i++){
-    const d=new Date(mon);
-    d.setDate(mon.getDate()+i);
-    days.push(d.getTime());
+function saveEdit(id) {
+  const h = parseInt(document.getElementById(`edit-h-${id}`).value) || 0;
+  const m = parseInt(document.getElementById(`edit-m-${id}`).value) || 0;
+  const task = tasks.find(t => t.id === id);
+  if (task) {
+    task.elapsedTime = (h * 60) + m;
+    saveData();
+    render();
+    renderStats();
   }
-  return days;
 }
-function renderStats(){
-  const container=document.getElementById('chartContainer');
-  const weekStarts=getWeekDays();
-  const data={tech:[0,0,0,0,0,0,0],soft:[0,0,0,0,0,0,0]};
+
+function deleteTask(id) {
+  if(!confirm('Удалить?')) return;
+  if (timers[id]) { clearInterval(timers[id].intervalId); delete timers[id]; }
+  tasks = tasks.filter(t => t.id !== id);
+  saveData();
+  render();
+  renderStats();
+}
+
+function render() {
+  const techList = document.getElementById('list-tech');
+  const softList = document.getElementById('list-soft');
+  techList.innerHTML = '';
+  softList.innerHTML = '';
+
+  tasks.forEach(task => {
+    const li = document.createElement('li');
+    li.className = 'task-item';
+    li.id = `task-row-${task.id}`;
+    
+    let icon = theme === 'quest' ? (task.status === 'completed' ? '🛡️' : '⚔️') : (task.status === 'completed' ? '🔘' : '⚪');
+    let timerText = '00:00';
+    
+    if (task.status === 'completed') {
+      const h = Math.floor(task.elapsedTime / 60);
+      const m = task.elapsedTime % 60;
+      timerText = `Сделано за ${h}ч ${m}м`;
+    } else if (timers[task.id]) {
+      const t = timers[task.id];
+      const totalMins = t.elapsed + Math.floor((Date.now() - t.startTime)/60000);
+      timerText = `${Math.floor(totalMins/60)}ч ${(totalMins%60).toString().padStart(2,'0')}м`;
+    }
+
+    const editBtn = task.status === 'completed' ? `<button class="edit-btn" onclick="editTask(${task.id}, event)">✏️</button>` : '';
+    
+    li.innerHTML = `
+      <span class="task-icon">${icon}</span>
+      <span class="task-text">${task.text}</span>
+      <div style="display:flex; align-items:center;">
+        <button id="timer-btn-${task.id}" class="timer-btn" onclick="toggleTimer(${task.id})">${timerText}</button>
+        ${editBtn}
+        <button class="edit-btn" style="color:red" onclick="deleteTask(${task.id})">🗑️</button>
+      </div>`;
+
+    if (task.type === 'tech') techList.appendChild(li);
+    else softList.appendChild(li);
+  });
+}
+
+function renderStats() {
+  const container = document.getElementById('statsContent');
+  container.innerHTML = '';
+  const now = new Date();
+  const dayOfWeek = now.getDay() || 7; 
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dayOfWeek + 1);
+  monday.setHours(0,0,0,0);
   
-  tasks.forEach(t=>{
-    // Simple logic: assign all time to today if not dated, 
-    // but requirement says "Mon-Sun current week". 
-    // Since we don't store dates per task in this compact version, 
-    // we will simulate distribution or just dump to today for demo.
-    // To make it functional: We assume tasks created this week count.
-    const created=new Date(t.id);
-    const ts=created.getTime();
-    if(ts>=weekStarts[0] && ts<=weekStarts[6]+86400000){
-       // Find day index
-       let idx=0;
-       for(let i=0;i<7;i++){
-         if(ts>=weekStarts[i] && ts<weekStarts[i]+86400000) idx=i;
-       }
-       if(t.type==='tech') data.tech[idx]+=t.timeSpent;
-       else data.soft[idx]+=t.timeSpent;
+  const weekDays = [];
+  for(let i=0; i<7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDays.push(d.getTime());
+  }
+
+  const stats = weekDays.map(() => ({ tech: 0, soft: 0 }));
+  
+  tasks.forEach(t => {
+    if (t.status !== 'completed' || !t.completedAt) return;
+    const tDate = new Date(t.completedAt);
+    tDate.setHours(0,0,0,0);
+    const idx = weekDays.indexOf(tDate.getTime());
+    if (idx !== -1) {
+      if (t.type === 'tech') stats[idx].tech += t.elapsedTime;
+      else stats[idx].soft += t.elapsedTime;
     }
   });
 
-  if(theme==='serious'){
-    let html='<div class="histogram">';
-    const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-    for(let i=0;i<7;i++){
-      const total=data.tech[i]+data.soft[i];
-      const hTotal=Math.min(total,120); // cap at 2h for visual
-      const pctT=total? (data.tech[i]/total)*100 : 0;
-      const pctS=total? (data.soft[i]/total)*100 : 0;
-      const hPx=(hTotal/120)*100;
-      html+=`<div class="bar-col"><div class="bar" style="height:${hPx}%"><div class="seg-tech" style="height:${pctT}%"></div><div class="seg-soft" style="height:${pctS}%"></div></div><div class="day-label">${days[i]}</div></div>`;
-    }
-    html+='</div>';
-    container.innerHTML=html;
-  }else{
-    // Quest Constellation
-    let html='<div class="constellation"><svg class="lines"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#fff" /></marker></defs>';
-    // Points
-    const points=[];
-    let x=20, y=20;
-    for(let i=0;i<7;i++){
-      const mins=data.tech[i]+data.soft[i];
-      const stars=Math.floor(mins/60);
-      for(let s=0;s<stars;s++){
-        points.push({x:x+(Math.random()*40), y:y+(Math.random()*80), type: s<data.tech[i]?'tech':'soft'});
-      }
-      x+=130;
-    }
-    // Draw lines
-    if(points.length>1){
-      let d=`M${points[0].x} ${points[0].y}`;
-      points.forEach(p=>d+=` L${p.x} ${p.y}`);
-      html+=`<path d="${d}" class="line-seg" fill="none" />`;
-    }
-    // Draw stars
-    points.forEach(p=>{
-      html+=`<div class="star ${p.type}" style="left:${p.x}px;top:${p.y}px"></div>`;
+  if (theme === 'serious') {
+    const hist = document.createElement('div');
+    hist.className = 'histogram';
+    const maxVal = Math.max(...stats.map(s => s.tech + s.soft), 10);
+    
+    stats.forEach((day, i) => {
+      const techH = (day.tech / maxVal) * 100;
+      const softH = (day.soft / maxVal) * 100;
+      const group = document.createElement('div');
+      group.className = 'bar-group';
+      const barCont = document.createElement('div');
+      barCont.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column-reverse;';
+      
+      const segTech = document.createElement('div');
+      segTech.className = 'bar-segment bar-tech';
+      segTech.style.height = `${techH}%`;
+      
+      const segSoft = document.createElement('div');
+      segSoft.className = 'bar-segment bar-soft';
+      segSoft.style.height = `${softH}%`;
+      
+      barCont.appendChild(segTech);
+      barCont.appendChild(segSoft);
+      
+      const label = document.createElement('div');
+      label.className = 'day-label';
+      label.innerText = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i];
+      
+      group.appendChild(barCont);
+      group.appendChild(label);
+      hist.appendChild(group);
     });
-    html+='</svg></div>';
-    container.innerHTML=html;
+    container.appendChild(hist);
+  } else {
+    const constBox = document.createElement('div');
+    constBox.className = 'constellation';
+    let points = [];
+    
+    stats.forEach((day, dayIdx) => {
+      const techStars = Math.floor(day.tech / 60);
+      const softStars = Math.floor(day.soft / 60);
+      for(let i=0; i<techStars; i++) points.push({ type: 'tech', day: dayIdx, offset: i });
+      for(let i=0; i<softStars; i++) points.push({ type: 'soft', day: dayIdx, offset: i });
+    });
+    
+    if (points.length > 1) {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", "100%");
+      svg.setAttribute("height", "100%");
+      svg.style.position = "absolute";
+      svg.style.top = "0";
+      svg.style.left = "0";
+      
+      const polyline = document.createElementNS(svgNS, "polyline");
+      polyline.setAttribute("fill", "none");
+      polyline.setAttribute("stroke", "rgba(255,255,255,0.3)");
+      polyline.setAttribute("stroke-width", "2");
+      polyline.setAttribute("points", points.map((p, i) => {
+        p.x = (p.day / 6) * 90 + 5;
+        p.y = 50 + (Math.sin(i * 0.5) * 40);
+        return `${p.x}%,${p.y}%`;
+      }).join(" "));
+      svg.appendChild(polyline);
+      constBox.appendChild(svg);
+    }
+    
+    points.forEach(p => {
+      const dot = document.createElement('div');
+      dot.className = 'star-point';
+      dot.style.left = p.x + '%';
+      dot.style.top = p.y + '%';
+      dot.style.background = p.type === 'tech' ? '#2196F3' : '#4CAF50';
+      constBox.appendChild(dot);
+    });
+    container.appendChild(constBox);
   }
 }
+
+init();
 </script>
 </body>
 </html>
