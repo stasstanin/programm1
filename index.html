@@ -57,7 +57,7 @@ body { font-family: 'Courier New', monospace; background: var(--bg); color: var(
     <ul class="task-list" id="list-tech"></ul>
     <div class="add-form">
       <input type="text" class="add-input" id="input-tech" placeholder="Новая задача...">
-      <button class="add-btn" onclick="addTask('tech')">Добавить</button>
+      <button class="add-btn" id="add-tech-btn">Добавить</button>
     </div>
   </div>
   <div class="column" id="col-soft">
@@ -65,7 +65,7 @@ body { font-family: 'Courier New', monospace; background: var(--bg); color: var(
     <ul class="task-list" id="list-soft"></ul>
     <div class="add-form">
       <input type="text" class="add-input" id="input-soft" placeholder="Новый навык...">
-      <button class="add-btn" onclick="addTask('soft')">Добавить</button>
+      <button class="add-btn" id="add-soft-btn">Добавить</button>
     </div>
   </div>
 </div>
@@ -119,6 +119,9 @@ document.getElementById('avatarInput').addEventListener('change', (e) => {
 
 document.getElementById('themeToggle').addEventListener('click', () => setTheme(theme === 'serious' ? 'quest' : 'serious'));
 
+document.getElementById('add-tech-btn').addEventListener('click', () => addTask('tech'));
+document.getElementById('add-soft-btn').addEventListener('click', () => addTask('soft'));
+
 function setTheme(newTheme) {
   theme = newTheme;
   document.body.className = theme === 'quest' ? 'quest' : '';
@@ -163,12 +166,11 @@ function updateTimerDisplay(id) {
   const totalMins = timers[id].elapsed + Math.floor((Date.now() - timers[id].startTime) / 60000);
   const h = Math.floor(totalMins / 60);
   const m = totalMins % 60;
-  const btn = document.getElementById(`timer-btn-${id}`);
+  const btn = document.querySelector(`.timer-btn[data-task-id="${id}"]`);
   if (btn) btn.innerText = `${h}ч ${m.toString().padStart(2, '0')}м`;
 }
 
-function editTask(id, event) {
-  if(event) event.stopPropagation();
+function editTask(id) {
   const task = tasks.find(t => t.id === id);
   if (!task || task.status !== 'completed') return;
   const row = document.getElementById(`task-row-${id}`);
@@ -177,18 +179,21 @@ function editTask(id, event) {
   const mins = task.elapsedTime % 60;
   textSpan.innerHTML = `
     <div class="edit-panel">
-      <input type="number" class="edit-input" id="edit-h-${id}" value="${hours}" min="0">
+      <input type="number" class="edit-input" value="${hours}" min="0" data-edit-h>
       <span>:</span>
-      <input type="number" class="edit-input" id="edit-m-${id}" value="${mins}" min="0" max="59">
-      <button class="save-edit-btn" onclick="saveEdit(${id})">OK</button>
+      <input type="number" class="edit-input" value="${mins}" min="0" max="59" data-edit-m>
+      <button class="save-edit-btn" data-save-edit="${id}">OK</button>
     </div>`;
   row.querySelector('.timer-btn').style.display = 'none';
-  row.querySelector('.edit-btn').style.display = 'none';
+  row.querySelectorAll('.edit-btn').forEach(b => b.style.display = 'none');
 }
 
 function saveEdit(id) {
-  const h = parseInt(document.getElementById(`edit-h-${id}`).value) || 0;
-  const m = parseInt(document.getElementById(`edit-m-${id}`).value) || 0;
+  const row = document.getElementById(`task-row-${id}`);
+  const hInput = row.querySelector('[data-edit-h]');
+  const mInput = row.querySelector('[data-edit-m]');
+  const h = parseInt(hInput.value) || 0;
+  const m = parseInt(mInput.value) || 0;
   const task = tasks.find(t => t.id === id);
   if (task) {
     task.elapsedTime = (h * 60) + m;
@@ -206,6 +211,41 @@ function deleteTask(id) {
   render();
   renderStats();
 }
+
+// Event Delegation - ОДИН слушатель на document
+document.addEventListener('click', function(e) {
+  // Клик по таймеру
+  const timerBtn = e.target.closest('.timer-btn');
+  if (timerBtn) {
+    const id = parseInt(timerBtn.getAttribute('data-task-id'));
+    if (!isNaN(id)) toggleTimer(id);
+    return;
+  }
+
+  // Клик по карандашу (редактирование)
+  const editBtn = e.target.closest('.edit-btn');
+  if (editBtn && !editBtn.classList.contains('delete-btn')) {
+    const id = parseInt(editBtn.getAttribute('data-task-id'));
+    if (!isNaN(id)) editTask(id);
+    return;
+  }
+
+  // Клик по удалению
+  const deleteBtn = e.target.closest('.delete-btn');
+  if (deleteBtn) {
+    const id = parseInt(deleteBtn.getAttribute('data-task-id'));
+    if (!isNaN(id)) deleteTask(id);
+    return;
+  }
+
+  // Клик по сохранению редактирования
+  const saveBtn = e.target.closest('[data-save-edit]');
+  if (saveBtn) {
+    const id = parseInt(saveBtn.getAttribute('data-save-edit'));
+    if (!isNaN(id)) saveEdit(id);
+    return;
+  }
+});
 
 function render() {
   const techList = document.getElementById('list-tech');
@@ -231,15 +271,15 @@ function render() {
       timerText = `${Math.floor(totalMins/60)}ч ${(totalMins%60).toString().padStart(2,'0')}м`;
     }
 
-    const editBtn = task.status === 'completed' ? `<button class="edit-btn" onclick="editTask(${task.id}, event)">✏️</button>` : '';
+    const editBtn = task.status === 'completed' ? `<button class="edit-btn" data-task-id="${task.id}">✏️</button>` : '';
     
     li.innerHTML = `
       <span class="task-icon">${icon}</span>
       <span class="task-text">${task.text}</span>
       <div style="display:flex; align-items:center;">
-        <button id="timer-btn-${task.id}" class="timer-btn" onclick="toggleTimer(${task.id})">${timerText}</button>
+        <button class="timer-btn" data-task-id="${task.id}">${timerText}</button>
         ${editBtn}
-        <button class="edit-btn" style="color:red" onclick="deleteTask(${task.id})">🗑️</button>
+        <button class="edit-btn delete-btn" data-task-id="${task.id}">🗑️</button>
       </div>`;
 
     if (task.type === 'tech') techList.appendChild(li);
